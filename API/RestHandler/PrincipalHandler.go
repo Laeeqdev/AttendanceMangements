@@ -2,13 +2,11 @@ package resthandler
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
-
 	auth "github.com/Laeeqdev/AttendanceMangements/API/Auth"
 	models "github.com/Laeeqdev/AttendanceMangements/API/Models"
 	service "github.com/Laeeqdev/AttendanceMangements/API/Service"
-	//"github.com/go-pg/pg"
+	"log"
+	"net/http"
 )
 
 func AddUser(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +19,7 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err, ok := service.CheckRole(email)
+	err, ok := service.IsPrincipal(email)
 	if err != nil || !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

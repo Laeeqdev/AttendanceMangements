@@ -1,9 +1,5 @@
 package models
 
-import (
-	"time"
-)
-
 type Users struct {
 	ID       int    `json:"id",pg:",pk"` // Annotation for primary key
 	Name     string `json:"name"`
@@ -15,34 +11,48 @@ type Users struct {
 
 // Class represents the Class table in PostgreSQL.
 type Studclass struct {
-	ID        int    `json:"id"`
+	ID        int    `json:"id",pg:",pk"`
 	UserId    int    `json:"user_id",pg:"user_id"`
 	ClassName string `json:"class",pg:"class_name"`
 }
 
 // Student represents the Students table in PostgreSQL.
 type Student struct {
-	ID        int       `json:"id"`
-	UserID    int       `json:"user_id"`
-	Date      time.Time `json:"date"`
-	Status    bool      `json:"status"`
-	ClassName string    `json:"class"`
+	ID     int    `json:"id",pg:",pk"`
+	UserId int    `json:"user_id",pg:"user_id"`
+	Date   string `json:"date"`
+	Status bool   `json:"status"`
+	Class  string `json:"class",pg:"class"`
 }
 
 // Teacher represents the Teacher table in PostgreSQL.
 type Teacher struct {
-	ID     int       `json:"id"`
-	UserID int       `json:"user_id"`
-	Date   time.Time `json:"date"`
-	Status bool      `json:"status"`
+	ID     int    `json:"id",pg:",pk"`
+	UserId int    `json:"user_id",pg:"user_id"`
+	Date   string `json:"date"`
+	Status bool   `json:"status"`
 }
 
 // Attendance represents the Attendance table in PostgreSQL.
 type Attendance struct {
-	ID        int       `json:"id"`
-	UserID    int       `json:"user_id"`
-	Date      time.Time `json:"date"`
-	PunchIn   time.Time `json:"punch_in"`
-	PunchOut  time.Time `json:"punch_out"`
-	ClassName string    `json:"class"`
+	ID       int    `json:"id",pg:",pk"`
+	UserId   int    `json:"user_id",pg:"user_id"`
+	Date     string `json:"date"`
+	PunchIn  string `json:"punch_in",pg:"punch_in"`
+	PunchOut string `json:"punch_out",pg:"punch_out"`
+	Class    string `json:"class",pg:"class"`
+}
+
+// just for data
+type Details struct {
+	Email string `json:email`
+	Date  string `json:date`
+	Class string `json:class`
+}
+
+// just for data fetching
+type AttendanceSchema struct {
+	Name   string `json:"name,omitempty"`
+	Date   string `json:"date"`
+	Status bool   `json:"status"`
 }

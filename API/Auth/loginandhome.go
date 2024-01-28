@@ -14,8 +14,6 @@ import (
 
 var JwtKey = []byte("Laeeq_Ahmad")
 
-// var users=map[string]string{"dsnc":"jsdn"}
-
 type Claims struct {
 	Email string `json:"email"`
 	jwt.StandardClaims
@@ -29,7 +27,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err, yes := service.MatchPassword(credentials.Email, credentials.Password)
-	if !yes || err != nil {
+	if !yes {
+		fmt.Println("i am the error")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -54,6 +53,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Value:   tokenString,
 			Expires: expirationTime,
 		})
+	fmt.Fprint(w, "login_in successful")
 }
 func Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{

@@ -24,7 +24,7 @@ func MatchPassword(email string, expectedpassword string) (error, bool) {
 	}
 	return nil, false
 }
-func CheckRole(email string) (error, bool) {
+func IsPrincipal(email string) (error, bool) {
 	err, role := repository.GetRole(email)
 	if err != nil {
 		return err, false
