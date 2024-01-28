@@ -72,6 +72,10 @@ func GetStudentDetails(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 func GetStudentDetailsByClass(w http.ResponseWriter, r *http.Request) {
+	if r.Body == nil {
+		json.NewEncoder(w).Encode("please send some data like date class")
+		return
+	}
 	email, err := auth.GetMailFromCookie(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)

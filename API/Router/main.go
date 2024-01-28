@@ -31,8 +31,7 @@ func main() {
 	r.HandleFunc("/punchout", resthandler.PunchOutUser).Methods("POST")
 	r.HandleFunc("/getteacherdetails", resthandler.GetTeacherDetails).Methods("POST")
 	r.HandleFunc("/getstudentdetails", resthandler.GetStudentDetails).Methods("POST")
-	// r.HandleFunc("/",Login).Methods("POST")
-	// r.HandleFunc("/Login",Login).Methods("POST")
+	r.HandleFunc("/getstudentdetailsbyclass", resthandler.GetStudentDetailsByClass).Methods("POST")
 	defer log.Fatal(http.ListenAndServe(":8081", r))
 	defer databaseconnection.Close()
 }

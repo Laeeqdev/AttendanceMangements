@@ -1,9 +1,12 @@
 package repository
 
 import (
+	"fmt"
+
 	constants "github.com/Laeeqdev/AttendanceMangements/API/Constant"
 	databaseconnection "github.com/Laeeqdev/AttendanceMangements/API/DatabaseConnection"
 	models "github.com/Laeeqdev/AttendanceMangements/API/Models"
+	"github.com/go-pg/pg"
 	//"github.com/go-pg/pg"
 )
 
@@ -58,6 +61,46 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 	}
 	return nil, details
 }
-func GetStudentDetails(user *models.Details) {
+func GetStudentDetails(user *models.Details) (error, []models.AttendanceSchema) {
+	var DbConnection = databaseconnection.Connect()
+	dbMutex.Lock()
+	defer dbMutex.Unlock()
+	var details []models.AttendanceSchema
+	var studentmodel []models.Student
+	err := DbConnection.Model(&studentmodel).
+		Where("date = ? ", user.Date).
+		Where("class = ? ", user.Class).
+		Select()
+	if err != nil {
+		fmt.Println("line 2")
+		return err, nil
+	}
 
+	if err != nil {
+		fmt.Println("line 3")
+		return err, nil
+	}
+	for _, val := range studentmodel {
+		err, name := GetUserName(val.UserId, DbConnection)
+		if err != nil {
+			fmt.Println("line 3")
+			return err, nil
+		}
+		d := models.AttendanceSchema{
+			Name:   name,
+			Date:   val.Date,
+			Status: val.Status,
+		}
+		details = append(details, d)
+	}
+	return nil, details
+}
+func GetUserName(userId int, db *pg.DB) (error, string) {
+	var name string
+	err := db.Model(&models.Users{}).Column("name").Where(" id = ? ", userId).
+		Select(&name)
+	if err != nil {
+		return err, name
+	}
+	return err, name
 }

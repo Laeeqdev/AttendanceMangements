@@ -62,7 +62,7 @@ func IsPermissibleForTeacher(email string) (error, bool) {
 	return nil, false
 }
 func GetDetailsOfAStudentByClass(user *models.Details) (error, []models.AttendanceSchema) {
-	err, details := repository.GetUserDatails(user, "")
+	err, details := repository.GetStudentDetails(user)
 	if err != nil {
 		return err, nil
 	}
