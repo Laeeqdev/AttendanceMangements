@@ -28,10 +28,12 @@ func GetTeacherDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	user := &models.Details{}
-	if yes {
-		user = &models.Details{Email: email}
-	}
+
 	_ = json.NewDecoder(r.Body).Decode(&user)
+	if yes {
+		fmt.Println("hi im yes", email)
+		user.Email = email
+	}
 	err, data := service.GetDetailsOfATeacher(user)
 	if err != nil {
 		log.Println("Error getting details of user:", err)
@@ -53,15 +55,18 @@ func GetStudentDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	err, ok, yes := service.IsPermissibleForTeacherAndStudent(email)
 	if err != nil || !ok {
+		fmt.Println("hey I am inside ok")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	user := &models.Details{}
-	if yes {
-		user = &models.Details{Email: email}
-	}
+
 	_ = json.NewDecoder(r.Body).Decode(&user)
+	if yes {
+		fmt.Println("hey I am inside yes")
+		user.Email = email
+	}
 	err, data := service.GetDetailsOfAStudent(user)
 	if err != nil {
 		log.Println("Error getting details of user:", err)

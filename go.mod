@@ -4,6 +4,8 @@ go 1.21.6
 
 require github.com/go-pg/pg v8.0.7+incompatible
 
+require github.com/rs/cors v1.10.1 // indirect
+
 require (
 	github.com/go-pg/pg/v10 v10.12.0 // indirect
 	github.com/go-pg/zerochecker v0.2.0 // indirect

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"sync"
 
 	constants "github.com/Laeeqdev/AttendanceMangements/API/Constant"
@@ -24,7 +25,7 @@ func Adduser(user *models.Users) error {
 	if err != nil {
 		return err
 	}
-	if user.Role == constants.PRINCIPAL {
+	if user.Role == constants.STUDENT {
 		err, userId := GetUserId(user.Email, DbConnection)
 		if err != nil {
 			return err
@@ -69,4 +70,16 @@ func GetUserId(email string, DbConnection *pg.DB) (error, int) {
 		return err, 0
 	}
 	return nil, userId
+}
+func GetNameAndRole(email string) (error, []string) {
+	var DbConnection = databaseconnection.Connect()
+	var name, role string
+	err := DbConnection.Model(&models.Users{}).
+		Column("name", "role").
+		Where("email = ?", email).Select(&name, &role)
+	if err != nil {
+		return err, nil
+	}
+	fmt.Println(name, role)
+	return nil, []string{name, role}
 }

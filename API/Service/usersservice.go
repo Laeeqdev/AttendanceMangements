@@ -1,6 +1,7 @@
 package service
 
 import (
+	constants "github.com/Laeeqdev/AttendanceMangements/API/Constant"
 	models "github.com/Laeeqdev/AttendanceMangements/API/Models"
 	repository "github.com/Laeeqdev/AttendanceMangements/API/Repository"
 )
@@ -29,8 +30,15 @@ func IsPrincipal(email string) (error, bool) {
 	if err != nil {
 		return err, false
 	}
-	if role == "Principal" { //todo move all names to constant file
+	if role == constants.PRINCIPAL {
 		return nil, true
 	}
 	return nil, false
+}
+func GetDataForHome(email string) (error, []string) {
+	err, data := repository.GetNameAndRole(email)
+	if err != nil {
+		return err, nil
+	}
+	return nil, data
 }

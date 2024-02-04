@@ -45,9 +45,9 @@ type Attendance struct {
 
 // just for data
 type Details struct {
-	Email string `json:email`
-	Date  string `json:date`
-	Class string `json:class`
+	Email string `json:"email"`
+	Date  string `json:"date"`
+	Class string `json:"class,omitempty"`
 }
 
 // just for data fetching

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	models "github.com/Laeeqdev/AttendanceMangements/API/Models"
+	//repository "github.com/Laeeqdev/AttendanceMangements/API/Repository"
 	service "github.com/Laeeqdev/AttendanceMangements/API/Service"
 	"github.com/golang-jwt/jwt"
 )
@@ -19,21 +20,23 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+// login
 func Login(w http.ResponseWriter, r *http.Request) {
 	var credentials models.Users
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
+		fmt.Println("error in data")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	err, yes := service.MatchPassword(credentials.Email, credentials.Password)
 	if !yes {
-		fmt.Println("i am the error")
+		fmt.Println("password or email not found")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	expirationTime := time.Now().Add(time.Hour * 12)
+	expirationTime := time.Now().Add(time.Hour * 5)
 	claims := &Claims{
 		Email: credentials.Email,
 		StandardClaims: jwt.StandardClaims{
@@ -49,12 +52,25 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w,
 		&http.Cookie{
-			Name:    "token",
-			Value:   tokenString,
-			Expires: expirationTime,
+			Name:     "token",
+			Value:    tokenString,
+			Expires:  expirationTime,
+			HttpOnly: false,
+			Secure:   false,
+			Domain:   "",
+			Path:     "/v1",
 		})
-	fmt.Fprint(w, "login_in successful")
+	err, role := service.GetDataForHome(credentials.Email)
+	if err != nil {
+		fmt.Println("error while fetching role and name")
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(role)
 }
+
+// logout
 func Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
@@ -64,6 +80,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, "Logout successful")
 }
+
+// home
 func Home(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
@@ -91,9 +109,62 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Write([]byte(fmt.Sprintf("Hello,%s", claims.Email)))
+	err, data := service.GetDataForHome(claims.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(data)
 }
-func Refresh(w http.ResponseWriter, r http.Request) {
+func Refresh(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	tokenStr := cookie.Value
+	claims := &Claims{}
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims,
+		func(t *jwt.Token) (interface{}, error) {
+			return JwtKey, nil
+		})
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !tkn.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	expirationTime := time.Now().Add(time.Minute * 5)
+	claims.ExpiresAt = expirationTime.Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(JwtKey)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w,
+		&http.Cookie{
+			Name:     "token",
+			Value:    tokenString,
+			Expires:  expirationTime,
+			HttpOnly: false,
+			Secure:   false,
+			Domain:   "",
+			Path:     "/v1",
+		})
 
 }
 func GetMailFromCookie(w http.ResponseWriter, r *http.Request) (string, error) {

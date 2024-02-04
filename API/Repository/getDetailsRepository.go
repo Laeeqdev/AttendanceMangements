@@ -11,7 +11,7 @@ import (
 )
 
 type DetailsRepository interface {
-	GetUserDatails(user *models.Details, role string) (error, []*models.AttendanceSchema)
+	GetUserDatails(user *models.Details, role string) (error, []models.AttendanceSchema)
 	AlreadyPunchIn(user *models.Users) (error, string, string)
 }
 
@@ -22,11 +22,13 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 	defer dbMutex.Unlock()
 	err, user_Id := GetUserId(user.Email, DbConnection)
 	if err != nil {
+		fmt.Println("hey while getting userId", user.Date)
 		return err, nil
 	}
 	var details []models.AttendanceSchema
 	date := user.Date + "%"
 	if role == constants.STUDENT {
+		fmt.Println("hello I am inside the student")
 		var studentmodel []models.Student
 		err := DbConnection.Model(&studentmodel).
 			Where("user_id = ?", user_Id).
@@ -43,15 +45,20 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 			details = append(details, d)
 		}
 	} else if role == constants.TEACHER {
+		fmt.Print("hey I ma working", user.Date)
 		var teachermodel []models.Teacher
 		err := DbConnection.Model(&teachermodel).
 			Where("user_id = ?", user_Id).
 			Where("date ILIKE ? ", date).
 			Select()
 		if err != nil {
+			fmt.Println("hello")
 			return err, nil
 		}
 		for _, val := range teachermodel {
+			if err != nil {
+				return err, nil
+			}
 			d := models.AttendanceSchema{
 				Date:   val.Date,
 				Status: val.Status,
@@ -61,7 +68,7 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 	}
 	return nil, details
 }
-func GetStudentDetails(user *models.Details) (error, []models.AttendanceSchema) {
+func GetStudentDetailsByclass(user *models.Details) (error, []models.AttendanceSchema) {
 	var DbConnection = databaseconnection.Connect()
 	dbMutex.Lock()
 	defer dbMutex.Unlock()

@@ -29,7 +29,7 @@ func IsPermissibleForTeacherAndPrincipal(email string) (error, bool, bool) {
 	if role == constants.TEACHER { //todo move all names to constant file
 		return nil, true, true
 	}
-	return nil, false, false
+	return err, false, false
 }
 
 func GetDetailsOfAStudent(user *models.Details) (error, []models.AttendanceSchema) {
@@ -48,6 +48,7 @@ func IsPermissibleForTeacherAndStudent(email string) (error, bool, bool) {
 		return nil, true, false
 	}
 	if role == constants.STUDENT {
+		return nil, true, true
 	}
 	return nil, false, false
 }
@@ -62,7 +63,7 @@ func IsPermissibleForTeacher(email string) (error, bool) {
 	return nil, false
 }
 func GetDetailsOfAStudentByClass(user *models.Details) (error, []models.AttendanceSchema) {
-	err, details := repository.GetStudentDetails(user)
+	err, details := repository.GetStudentDetailsByclass(user)
 	if err != nil {
 		return err, nil
 	}
