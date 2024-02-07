@@ -43,6 +43,28 @@ func GetTeacherDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(data)
 }
+func GetDetails(w http.ResponseWriter, r *http.Request) {
+	email, err := auth.GetMailFromCookie(w, r)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if email == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	user := &models.PunchInPunchOutDetails{}
+	_ = json.NewDecoder(r.Body).Decode(&user)
+	err, data := service.GetDeatilsOfPunch(user)
+	if err != nil {
+		log.Println("Error getting details of user:", err)
+		fmt.Fprint(w, "getting data failed")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(data)
+}
 func GetStudentDetails(w http.ResponseWriter, r *http.Request) {
 	email, err := auth.GetMailFromCookie(w, r)
 	if err != nil {

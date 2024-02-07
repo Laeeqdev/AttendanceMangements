@@ -69,3 +69,10 @@ func GetDetailsOfAStudentByClass(user *models.Details) (error, []models.Attendan
 	}
 	return nil, details
 }
+func GetDeatilsOfPunch(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails) {
+	err, details := repository.GetDetails(user)
+	if err != nil {
+		return err, nil
+	}
+	return nil, details
+}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	constants "github.com/Laeeqdev/AttendanceMangements/API/Constant"
 	databaseconnection "github.com/Laeeqdev/AttendanceMangements/API/DatabaseConnection"
@@ -21,6 +22,7 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
 	err, user_Id := GetUserId(user.Email, DbConnection)
+	fmt.Println("my user id ", user_Id)
 	if err != nil {
 		fmt.Println("hey while getting userId", user.Date)
 		return err, nil
@@ -39,6 +41,7 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 		}
 		for _, val := range studentmodel {
 			d := models.AttendanceSchema{
+				UserId: user_Id,
 				Date:   val.Date,
 				Status: val.Status,
 			}
@@ -60,6 +63,7 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 				return err, nil
 			}
 			d := models.AttendanceSchema{
+				UserId: user_Id,
 				Date:   val.Date,
 				Status: val.Status,
 			}
@@ -94,6 +98,7 @@ func GetStudentDetailsByclass(user *models.Details) (error, []models.AttendanceS
 			return err, nil
 		}
 		d := models.AttendanceSchema{
+			UserId: val.UserId,
 			Name:   name,
 			Date:   val.Date,
 			Status: val.Status,
@@ -110,4 +115,58 @@ func GetUserName(userId int, db *pg.DB) (error, string) {
 		return err, name
 	}
 	return err, name
+}
+func GetDetails(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails) {
+	var DbConnection = databaseconnection.Connect()
+	dbMutex.Lock()
+	defer dbMutex.Unlock()
+	var details []models.PunchInPunchOutDetails
+	var attendancemodel []models.Attendance
+	err := DbConnection.Model(&attendancemodel).
+		Where("user_id = ? ", user.UserId).
+		Where("date = ? ", user.Date).
+		Select()
+	if err != nil {
+		fmt.Println("line 2")
+		return err, nil
+	}
+
+	if err != nil {
+		fmt.Println("line 3")
+		return err, nil
+	}
+	for _, val := range attendancemodel {
+		if err != nil {
+			fmt.Println("line 3")
+			return err, nil
+		}
+		err, duration := calculateDiffrence(val.PunchIn, val.PunchOut)
+		if err != nil {
+			return err, nil
+		}
+		d := models.PunchInPunchOutDetails{
+			PunchIn:  val.PunchIn,
+			PunchOut: val.PunchOut,
+			Duartion: duration,
+		}
+		details = append(details, d)
+	}
+
+	return nil, details
+}
+func calculateDiffrence(in string, out string) (error, string) {
+
+	punchInTime, err := time.Parse("15:04:05", in)
+	if err != nil {
+		fmt.Println("Error parsing punch in time:", err)
+		return err, ""
+	}
+	punchOutTime, err := time.Parse("15:04:05", out)
+	if err != nil {
+		fmt.Println("Error parsing punch out time:", err)
+		return err, ""
+	}
+	// Calculate duration
+	duration := punchOutTime.Sub(punchInTime)
+	return nil, duration.String()
 }

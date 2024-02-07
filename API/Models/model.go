@@ -52,7 +52,15 @@ type Details struct {
 
 // just for data fetching
 type AttendanceSchema struct {
+	UserId int    `json:"userId,omitempty"`
 	Name   string `json:"name,omitempty"`
 	Date   string `json:"date"`
 	Status bool   `json:"status"`
+}
+type PunchInPunchOutDetails struct {
+	UserId   string `json:"userId"`
+	Date     string `json:"date"`
+	PunchIn  string `json:"punchIn"`
+	PunchOut string `json:"punchOut"`
+	Duartion string `json:"duration"`
 }

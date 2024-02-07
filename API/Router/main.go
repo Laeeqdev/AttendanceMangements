@@ -36,6 +36,7 @@ func main() {
 	r.HandleFunc("/refresh", auth.Refresh).Methods("GET")
 	r.HandleFunc("/getstudentdetails", resthandler.GetStudentDetails).Methods("POST")
 	r.HandleFunc("/getstudentdetailsbyclass", resthandler.GetStudentDetailsByClass).Methods("POST")
+	r.HandleFunc("/getDetails", resthandler.GetDetails).Methods("POST")
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowCredentials: true,
