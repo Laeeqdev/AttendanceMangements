@@ -6,17 +6,28 @@ import (
 	repository "github.com/Laeeqdev/AttendanceMangements/API/Repository"
 )
 
-type ImageTaggingRepository interface {
+type UserService interface {
 	Adduser(user *models.Users) error
-	MatchPassword(password string) (error, bool)
+	MatchPassword(email string, expectedpassword string) (error, bool)
+	IsPrincipal(email string) (error, bool)
+	GetDataForHome(email string) (error, []string)
 }
 
-func Adduser(user *models.Users) error {
-	err := repository.Adduser(user)
+type UserServiceImpl struct {
+	userRepository repository.UserRepository
+}
+
+func NewUserServiceImpl(userRepository repository.UserRepository) *UserServiceImpl {
+	return &UserServiceImpl{
+		userRepository: userRepository,
+	}
+}
+func (impl *UserServiceImpl) Adduser(user *models.Users) error {
+	err := impl.userRepository.Adduser(user)
 	return err
 }
-func MatchPassword(email string, expectedpassword string) (error, bool) {
-	err, password := repository.Findpassword(email)
+func (impl *UserServiceImpl) MatchPassword(email string, expectedpassword string) (error, bool) {
+	err, password := impl.userRepository.Findpassword(email)
 	if err != nil {
 		return err, false
 	}
@@ -25,7 +36,7 @@ func MatchPassword(email string, expectedpassword string) (error, bool) {
 	}
 	return nil, false
 }
-func IsPrincipal(email string) (error, bool) {
+func (impl *UserServiceImpl) IsPrincipal(email string) (error, bool) {
 	err, role := repository.GetRole(email)
 	if err != nil {
 		return err, false
@@ -35,7 +46,7 @@ func IsPrincipal(email string) (error, bool) {
 	}
 	return nil, false
 }
-func GetDataForHome(email string) (error, []string) {
+func (impl *UserServiceImpl) GetDataForHome(email string) (error, []string) {
 	err, data := repository.GetNameAndRole(email)
 	if err != nil {
 		return err, nil

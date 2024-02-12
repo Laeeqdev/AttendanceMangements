@@ -57,6 +57,8 @@ type AttendanceSchema struct {
 	Date   string `json:"date"`
 	Status bool   `json:"status"`
 }
+
+// PunchInPunchOutDetails
 type PunchInPunchOutDetails struct {
 	UserId   string `json:"userId"`
 	Date     string `json:"date"`

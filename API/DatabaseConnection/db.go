@@ -22,14 +22,12 @@ func Connect() *pg.DB {
 
 // initializeConnection sets up the database connection.
 func initializeConnection() *pg.DB {
-	// Your database connection setup code here
 	opts := &pg.Options{
 		User:     os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
 		Addr:     os.Getenv("DB_ADDR"),
 		Database: os.Getenv("DB_DATABASE"),
 	}
-	//x:=9
 	var db *pg.DB = pg.Connect(opts)
 	if db == nil {
 		log.Printf("Database connection failed.\n")
@@ -37,9 +35,8 @@ func initializeConnection() *pg.DB {
 	} else {
 		log.Printf("connected")
 	}
-	//var dbb *pg.DB= *pg.DB;
+
 	return db
-	//return nil
 }
 func Close() {
 	if db != nil {

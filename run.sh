@@ -1,5 +1,3 @@
 echo "I am running" 
-cd API
-cd Router
-go run main.go
+go run .
 echo "I am stopped" 

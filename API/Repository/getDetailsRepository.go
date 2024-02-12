@@ -5,7 +5,6 @@ import (
 	"time"
 
 	constants "github.com/Laeeqdev/AttendanceMangements/API/Constant"
-	databaseconnection "github.com/Laeeqdev/AttendanceMangements/API/DatabaseConnection"
 	models "github.com/Laeeqdev/AttendanceMangements/API/Models"
 	"github.com/go-pg/pg"
 	//"github.com/go-pg/pg"
@@ -13,15 +12,25 @@ import (
 
 type DetailsRepository interface {
 	GetUserDatails(user *models.Details, role string) (error, []models.AttendanceSchema)
-	AlreadyPunchIn(user *models.Users) (error, string, string)
+	GetStudentDetailsByclass(user *models.Details) (error, []models.AttendanceSchema)
+	GetDetails(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails)
+}
+type DetailsRepositoryImpl struct {
+	DbConnection *pg.DB
+}
+
+func NewDetailsRepositoryImpl(db *pg.DB) *DetailsRepositoryImpl {
+	return &DetailsRepositoryImpl{
+		DbConnection: db,
+	}
 }
 
 // punch in code starts from here
-func GetUserDatails(user *models.Details, role string) (error, []models.AttendanceSchema) {
-	var DbConnection = databaseconnection.Connect()
+func (impl *DetailsRepositoryImpl) GetUserDatails(user *models.Details, role string) (error, []models.AttendanceSchema) {
+
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
-	err, user_Id := GetUserId(user.Email, DbConnection)
+	err, user_Id := GetUserId(user.Email, impl.DbConnection)
 	fmt.Println("my user id ", user_Id)
 	if err != nil {
 		fmt.Println("hey while getting userId", user.Date)
@@ -32,7 +41,7 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 	if role == constants.STUDENT {
 		fmt.Println("hello I am inside the student")
 		var studentmodel []models.Student
-		err := DbConnection.Model(&studentmodel).
+		err := impl.DbConnection.Model(&studentmodel).
 			Where("user_id = ?", user_Id).
 			Where("date ILIKE ? ", date).
 			Select()
@@ -47,10 +56,11 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 			}
 			details = append(details, d)
 		}
+
 	} else if role == constants.TEACHER {
 		fmt.Print("hey I ma working", user.Date)
 		var teachermodel []models.Teacher
-		err := DbConnection.Model(&teachermodel).
+		err := impl.DbConnection.Model(&teachermodel).
 			Where("user_id = ?", user_Id).
 			Where("date ILIKE ? ", date).
 			Select()
@@ -72,13 +82,13 @@ func GetUserDatails(user *models.Details, role string) (error, []models.Attendan
 	}
 	return nil, details
 }
-func GetStudentDetailsByclass(user *models.Details) (error, []models.AttendanceSchema) {
-	var DbConnection = databaseconnection.Connect()
+
+func (impl *DetailsRepositoryImpl) GetStudentDetailsByclass(user *models.Details) (error, []models.AttendanceSchema) {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
 	var details []models.AttendanceSchema
 	var studentmodel []models.Student
-	err := DbConnection.Model(&studentmodel).
+	err := impl.DbConnection.Model(&studentmodel).
 		Where("date = ? ", user.Date).
 		Where("class = ? ", user.Class).
 		Select()
@@ -92,7 +102,7 @@ func GetStudentDetailsByclass(user *models.Details) (error, []models.AttendanceS
 		return err, nil
 	}
 	for _, val := range studentmodel {
-		err, name := GetUserName(val.UserId, DbConnection)
+		err, name := GetUserName(val.UserId, impl.DbConnection)
 		if err != nil {
 			fmt.Println("line 3")
 			return err, nil
@@ -116,13 +126,13 @@ func GetUserName(userId int, db *pg.DB) (error, string) {
 	}
 	return err, name
 }
-func GetDetails(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails) {
-	var DbConnection = databaseconnection.Connect()
+func (impl *DetailsRepositoryImpl) GetDetails(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails) {
+
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
 	var details []models.PunchInPunchOutDetails
 	var attendancemodel []models.Attendance
-	err := DbConnection.Model(&attendancemodel).
+	err := impl.DbConnection.Model(&attendancemodel).
 		Where("user_id = ? ", user.UserId).
 		Where("date = ? ", user.Date).
 		Select()
@@ -139,6 +149,9 @@ func GetDetails(user *models.PunchInPunchOutDetails) (error, []models.PunchInPun
 		if err != nil {
 			fmt.Println("line 3")
 			return err, nil
+		}
+		if val.PunchOut == "" {
+			continue
 		}
 		err, duration := calculateDiffrence(val.PunchIn, val.PunchOut)
 		if err != nil {

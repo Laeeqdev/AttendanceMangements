@@ -2,31 +2,37 @@ package repository
 
 import (
 	"fmt"
-	"sync"
-
 	constants "github.com/Laeeqdev/AttendanceMangements/API/Constant"
 	databaseconnection "github.com/Laeeqdev/AttendanceMangements/API/DatabaseConnection"
 	models "github.com/Laeeqdev/AttendanceMangements/API/Models"
 	"github.com/go-pg/pg"
+	"sync"
 )
 
-type ImageTaggingRepository interface {
-	AddTeacher(user *models.Users) error
+type UserRepository interface {
+	Adduser(user *models.Users) error
+	Findpassword(email string) (error, string)
+}
+type UserRepositoryImpl struct {
+	DbConnection *pg.DB
+}
+
+func NewUserRepositoryImpl(db *pg.DB) *UserRepositoryImpl {
+	return &UserRepositoryImpl{DbConnection: db}
 }
 
 var dbMutex sync.Mutex
 
-func Adduser(user *models.Users) error {
-	var DbConnection = databaseconnection.Connect()
+func (impl *UserRepositoryImpl) Adduser(user *models.Users) error {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
-	_, err := DbConnection.Model(user).Insert()
+	_, err := impl.DbConnection.Model(user).Insert()
 
 	if err != nil {
 		return err
 	}
 	if user.Role == constants.STUDENT {
-		err, userId := GetUserId(user.Email, DbConnection)
+		err, userId := GetUserId(user.Email, impl.DbConnection)
 		if err != nil {
 			return err
 		}
@@ -34,19 +40,18 @@ func Adduser(user *models.Users) error {
 			UserId:    userId,
 			ClassName: user.Class,
 		}
-		_, er := DbConnection.Model(studclass).Insert()
+		_, er := impl.DbConnection.Model(studclass).Insert()
 		if er != nil {
 			return er
 		}
 	}
 	return nil
 }
-func Findpassword(email string) (error, string) {
+func (impl *UserRepositoryImpl) Findpassword(email string) (error, string) {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
-	var DbConnection = databaseconnection.Connect()
 	var pswd string
-	err := DbConnection.Model(&models.Users{}).Column("password").Where("email = ?", email).Select(&pswd)
+	err := impl.DbConnection.Model(&models.Users{}).Column("password").Where("email = ?", email).Select(&pswd)
 	if err != nil {
 		return err, ""
 	}

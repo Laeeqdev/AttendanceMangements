@@ -10,15 +10,23 @@ type PunchinService interface {
 	Punch_in(email string) (error, bool)
 	Punch_out(email string) (error, bool)
 }
+type PunchinServiceImpl struct {
+	punchinRepository repository.PunchinRepository
+}
 
-func Punch_in(email string) (error, bool) {
-	err, ok := repository.AlreadyPunch(email)
+func NewPunchinServiceImpl(punchinRepository repository.PunchinRepository) *PunchinServiceImpl {
+	return &PunchinServiceImpl{
+		punchinRepository: punchinRepository,
+	}
+}
+func (impl *PunchinServiceImpl) Punch_in(email string) (error, bool) {
+	err, ok := impl.punchinRepository.AlreadyPunch(email)
 	if err != nil {
 		fmt.Println("yes while cheking")
 		return err, false
 	}
 	if !ok {
-		err = repository.PunchInUser(email)
+		err = impl.punchinRepository.PunchInUser(email)
 		if err != nil {
 			return err, false
 		}
@@ -28,14 +36,14 @@ func Punch_in(email string) (error, bool) {
 	return nil, false
 }
 
-func Punch_out(email string) (error, bool) {
-	err, ok := repository.AlreadyPunch(email)
+func (impl *PunchinServiceImpl) Punch_out(email string) (error, bool) {
+	err, ok := impl.punchinRepository.AlreadyPunch(email)
 	if err != nil {
 		fmt.Println("while punchout")
 		return err, false
 	}
 	if ok {
-		err = repository.PunchOutUser(email)
+		err = impl.punchinRepository.PunchOutUser(email)
 		if err != nil {
 			return err, false
 		}

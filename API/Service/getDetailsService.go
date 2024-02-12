@@ -7,18 +7,32 @@ import (
 )
 
 type GetDeatilsService interface {
-	GetDetailsOfATeacher(email string, user *models.Details) (error, []*models.AttendanceSchema)
+	GetDetailsOfATeacher(user *models.Details) (error, []models.AttendanceSchema)
+	IsPermissibleForTeacherAndPrincipal(email string) (error, bool, bool)
+	GetDetailsOfAStudent(user *models.Details) (error, []models.AttendanceSchema)
+	IsPermissibleForTeacherAndStudent(email string) (error, bool, bool)
+	IsPermissibleForTeacher(email string) (error, bool)
+	GetDetailsOfAStudentByClass(user *models.Details) (error, []models.AttendanceSchema)
+	GetDeatilsOfPunch(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails)
 }
 
-func GetDetailsOfATeacher(user *models.Details) (error, []models.AttendanceSchema) {
-	err, details := repository.GetUserDatails(user, constants.TEACHER)
+type GetDeatilsServiceImpl struct {
+	detailsRepository repository.DetailsRepository
+	userRepository    repository.UserRepository
+}
+
+func NewGetDeatilsServiceImpl(detailsRepository repository.DetailsRepository, userRepository repository.UserRepository) *GetDeatilsServiceImpl {
+	return &GetDeatilsServiceImpl{detailsRepository: detailsRepository, userRepository: userRepository}
+}
+func (impl *GetDeatilsServiceImpl) GetDetailsOfATeacher(user *models.Details) (error, []models.AttendanceSchema) {
+	err, details := impl.detailsRepository.GetUserDatails(user, constants.TEACHER)
 	if err != nil {
 		return err, nil
 	}
 	return nil, details
 }
 
-func IsPermissibleForTeacherAndPrincipal(email string) (error, bool, bool) {
+func (impl *GetDeatilsServiceImpl) IsPermissibleForTeacherAndPrincipal(email string) (error, bool, bool) {
 	err, role := repository.GetRole(email)
 	if err != nil {
 		return err, false, false
@@ -32,14 +46,14 @@ func IsPermissibleForTeacherAndPrincipal(email string) (error, bool, bool) {
 	return err, false, false
 }
 
-func GetDetailsOfAStudent(user *models.Details) (error, []models.AttendanceSchema) {
-	err, details := repository.GetUserDatails(user, constants.STUDENT)
+func (impl *GetDeatilsServiceImpl) GetDetailsOfAStudent(user *models.Details) (error, []models.AttendanceSchema) {
+	err, details := impl.detailsRepository.GetUserDatails(user, constants.STUDENT)
 	if err != nil {
 		return err, nil
 	}
 	return nil, details
 }
-func IsPermissibleForTeacherAndStudent(email string) (error, bool, bool) {
+func (impl *GetDeatilsServiceImpl) IsPermissibleForTeacherAndStudent(email string) (error, bool, bool) {
 	err, role := repository.GetRole(email)
 	if err != nil {
 		return err, false, false
@@ -52,7 +66,7 @@ func IsPermissibleForTeacherAndStudent(email string) (error, bool, bool) {
 	}
 	return nil, false, false
 }
-func IsPermissibleForTeacher(email string) (error, bool) {
+func (impl *GetDeatilsServiceImpl) IsPermissibleForTeacher(email string) (error, bool) {
 	err, role := repository.GetRole(email)
 	if err != nil {
 		return err, false
@@ -62,15 +76,15 @@ func IsPermissibleForTeacher(email string) (error, bool) {
 	}
 	return nil, false
 }
-func GetDetailsOfAStudentByClass(user *models.Details) (error, []models.AttendanceSchema) {
-	err, details := repository.GetStudentDetailsByclass(user)
+func (impl *GetDeatilsServiceImpl) GetDetailsOfAStudentByClass(user *models.Details) (error, []models.AttendanceSchema) {
+	err, details := impl.detailsRepository.GetStudentDetailsByclass(user)
 	if err != nil {
 		return err, nil
 	}
 	return nil, details
 }
-func GetDeatilsOfPunch(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails) {
-	err, details := repository.GetDetails(user)
+func (impl *GetDeatilsServiceImpl) GetDeatilsOfPunch(user *models.PunchInPunchOutDetails) (error, []models.PunchInPunchOutDetails) {
+	err, details := impl.detailsRepository.GetDetails(user)
 	if err != nil {
 		return err, nil
 	}

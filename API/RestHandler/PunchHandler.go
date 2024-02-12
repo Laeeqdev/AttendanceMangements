@@ -11,8 +11,20 @@ import (
 	service "github.com/Laeeqdev/AttendanceMangements/API/Service"
 )
 
-func PunchInUser(w http.ResponseWriter, r *http.Request) {
-	email, err := auth.GetMailFromCookie(w, r)
+type PunchInPunchOutHandler interface {
+	PunchInUser(w http.ResponseWriter, r *http.Request)
+	PunchOutUser(w http.ResponseWriter, r *http.Request)
+}
+type PunchInPunchOutHandlerImpl struct {
+	punchInService  service.PunchinService
+	userAuthHandler auth.UserAuthHandler
+}
+
+func NewPunchInPunchOutHandlerImpl(punchInService service.PunchinService, userAuthHandler auth.UserAuthHandler) *PunchInPunchOutHandlerImpl {
+	return &PunchInPunchOutHandlerImpl{punchInService: punchInService, userAuthHandler: userAuthHandler}
+}
+func (impl *PunchInPunchOutHandlerImpl) PunchInUser(w http.ResponseWriter, r *http.Request) {
+	email, err := impl.userAuthHandler.GetMailFromCookie(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -22,7 +34,7 @@ func PunchInUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	err, ok := service.Punch_in(email)
+	err, ok := impl.punchInService.Punch_in(email)
 	if err != nil {
 		log.Println("Error inserting attendance:", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -34,8 +46,8 @@ func PunchInUser(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprint(w, "punch_in successfully")
 }
-func PunchOutUser(w http.ResponseWriter, r *http.Request) {
-	email, err := auth.GetMailFromCookie(w, r)
+func (impl *PunchInPunchOutHandlerImpl) PunchOutUser(w http.ResponseWriter, r *http.Request) {
+	email, err := impl.userAuthHandler.GetMailFromCookie(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -45,7 +57,7 @@ func PunchOutUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	err, ok := service.Punch_out(email)
+	err, ok := impl.punchInService.Punch_out(email)
 	if err != nil {
 		log.Println("Error inserting attendance:", err)
 		w.WriteHeader(http.StatusBadRequest)

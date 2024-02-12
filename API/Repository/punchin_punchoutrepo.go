@@ -10,19 +10,26 @@ import (
 )
 
 type PunchinRepository interface {
-	AddAttendance(user *models.Users) error
-	AlreadyPunchIn(user *models.Users) (error, string, string)
+	PunchInUser(email string) error
+	AlreadyPunch(email string) (error, bool)
+	PunchOutUser(email string) error
+}
+type PunchinRepositoryImpl struct {
+	DbConnection *pg.DB
+}
+
+func NewPunchinRepositoryImpl(db *pg.DB) *PunchinRepositoryImpl {
+	return &PunchinRepositoryImpl{DbConnection: db}
 }
 
 // punch in code starts from here
-func PunchInUser(email string) error {
+func (impl *PunchinRepositoryImpl) PunchInUser(email string) error {
 	var currentTime = time.Now()
 	var Date string = currentTime.Format("2006-01-02") // Format for date: Year-Month-Day
 	var Time string = currentTime.Format("15:04:05")
-	var DbConnection = databaseconnection.Connect()
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
-	err, user_Id, role := GetRoleandUserId(email, DbConnection)
+	err, user_Id, role := GetRoleandUserId(email, impl.DbConnection)
 	if err != nil {
 		return err
 	}
@@ -30,13 +37,13 @@ func PunchInUser(email string) error {
 	class = ""
 	//hour:minutes:second
 	if role == constants.STUDENT {
-		err, class := GetClassByUserId(user_Id, DbConnection)
+		err, class := GetClassByUserId(user_Id, impl.DbConnection)
 		if err != nil {
 			return err
 		}
 		var yes bool
 		yes = false
-		err = DbConnection.Model(&models.Student{}).
+		err = impl.DbConnection.Model(&models.Student{}).
 			Column("status").
 			Where("user_id = ?", user_Id).
 			Where("date = ?", Date).
@@ -48,7 +55,7 @@ func PunchInUser(email string) error {
 				Status: true,
 				Class:  class,
 			}
-			_, er := DbConnection.Model(studentmodel).Insert()
+			_, er := impl.DbConnection.Model(studentmodel).Insert()
 			if er != nil {
 				return er
 			}
@@ -56,7 +63,7 @@ func PunchInUser(email string) error {
 	} else if role == constants.TEACHER {
 		var yes bool
 		yes = false
-		err = DbConnection.Model(&models.Teacher{}).
+		err = impl.DbConnection.Model(&models.Teacher{}).
 			Column("status").
 			Where("user_id = ?", user_Id).
 			Where("date = ?", Date).
@@ -67,7 +74,7 @@ func PunchInUser(email string) error {
 				Date:   Date,
 				Status: true,
 			}
-			_, er := DbConnection.Model(teachermodel).Insert()
+			_, er := impl.DbConnection.Model(teachermodel).Insert()
 			if er != nil {
 				return er
 			}
@@ -79,14 +86,14 @@ func PunchInUser(email string) error {
 		PunchIn: Time,
 		Class:   class,
 	}
-	_, er := DbConnection.Model(attendancemodel).Insert()
+	_, er := impl.DbConnection.Model(attendancemodel).Insert()
 	if er != nil {
 
 		return er
 	}
 	return nil
 }
-func AlreadyPunch(email string) (error, bool) {
+func (impl *PunchinRepositoryImpl) AlreadyPunch(email string) (error, bool) {
 	var currentTime = time.Now()
 	var Date string = currentTime.Format("2006-01-02") // Format for date: Year-Month-Day
 	DbConnection := databaseconnection.Connect()
@@ -113,6 +120,29 @@ func AlreadyPunch(email string) (error, bool) {
 	}
 	return nil, false
 }
+
+// punch out code starts from here
+func (impl *PunchinRepositoryImpl) PunchOutUser(email string) error {
+	var currentTime = time.Now()
+	var Date string = currentTime.Format("2006-01-02") // Format for date: Year-Month-Day
+	var Time string = currentTime.Format("15:04:05")
+	var DbConnection = databaseconnection.Connect()
+	dbMutex.Lock()
+	defer dbMutex.Unlock()
+	err, user_Id := GetUserId(email, DbConnection)
+	if err != nil {
+		return err
+	}
+	_, er := DbConnection.Model(&models.Attendance{}).
+		Where("user_id = ? ", user_Id).
+		Where(" date = ? ", Date).
+		Where("punch_in IS NOT NULL AND punch_out IS NULL").
+		Set("punch_out = ? ", Time).Update()
+	if er != nil {
+		return er
+	}
+	return nil
+}
 func GetRoleandUserId(email string, DbConnection *pg.DB) (error, int, string) {
 	var role string
 	var userId int
@@ -137,27 +167,4 @@ func GetClassByUserId(userId int, DbConnection *pg.DB) (error, string) {
 		return err, class
 	}
 	return nil, class
-}
-
-// punch out code starts from here
-func PunchOutUser(email string) error {
-	var currentTime = time.Now()
-	var Date string = currentTime.Format("2006-01-02") // Format for date: Year-Month-Day
-	var Time string = currentTime.Format("15:04:05")
-	var DbConnection = databaseconnection.Connect()
-	dbMutex.Lock()
-	defer dbMutex.Unlock()
-	err, user_Id := GetUserId(email, DbConnection)
-	if err != nil {
-		return err
-	}
-	_, er := DbConnection.Model(&models.Attendance{}).
-		Where("user_id = ? ", user_Id).
-		Where(" date = ? ", Date).
-		Where("punch_in IS NOT NULL AND punch_out IS NULL").
-		Set("punch_out = ? ", Time).Update()
-	if er != nil {
-		return er
-	}
-	return nil
 }

@@ -8,10 +8,24 @@ import (
 	"time"
 
 	models "github.com/Laeeqdev/AttendanceMangements/API/Models"
-	//repository "github.com/Laeeqdev/AttendanceMangements/API/Repository"
 	service "github.com/Laeeqdev/AttendanceMangements/API/Service"
 	"github.com/golang-jwt/jwt"
 )
+
+type UserAuthHandler interface {
+	Login(w http.ResponseWriter, r *http.Request)
+	Logout(w http.ResponseWriter, r *http.Request)
+	Home(w http.ResponseWriter, r *http.Request)
+	Refresh(w http.ResponseWriter, r *http.Request)
+	GetMailFromCookie(w http.ResponseWriter, r *http.Request) (string, error)
+}
+type UserAuthHandlerImpl struct {
+	userService service.UserService
+}
+
+func NewUserAuthHandlerImpl(userService service.UserService) *UserAuthHandlerImpl {
+	return &UserAuthHandlerImpl{userService: userService}
+}
 
 var JwtKey = []byte("Laeeq_Ahmad")
 
@@ -21,7 +35,7 @@ type Claims struct {
 }
 
 // login
-func Login(w http.ResponseWriter, r *http.Request) {
+func (impl *UserAuthHandlerImpl) Login(w http.ResponseWriter, r *http.Request) {
 	var credentials models.Users
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
@@ -29,7 +43,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err, yes := service.MatchPassword(credentials.Email, credentials.Password)
+	err, yes := impl.userService.MatchPassword(credentials.Email, credentials.Password)
 	if !yes {
 		fmt.Println("password or email not found")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -60,7 +74,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Domain:   "",
 			Path:     "/v1",
 		})
-	err, role := service.GetDataForHome(credentials.Email)
+	err, role := impl.userService.GetDataForHome(credentials.Email)
 	if err != nil {
 		fmt.Println("error while fetching role and name")
 		log.Println(err)
@@ -71,7 +85,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // logout
-func Logout(w http.ResponseWriter, r *http.Request) {
+func (impl *UserAuthHandlerImpl) Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   "",
@@ -82,7 +96,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 // home
-func Home(w http.ResponseWriter, r *http.Request) {
+func (impl *UserAuthHandlerImpl) Home(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -109,14 +123,14 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err, data := service.GetDataForHome(claims.Email)
+	err, data := impl.userService.GetDataForHome(claims.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(data)
 }
-func Refresh(w http.ResponseWriter, r *http.Request) {
+func (impl *UserAuthHandlerImpl) Refresh(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -165,9 +179,8 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 			Domain:   "",
 			Path:     "/v1",
 		})
-
 }
-func GetMailFromCookie(w http.ResponseWriter, r *http.Request) (string, error) {
+func (impl *UserAuthHandlerImpl) GetMailFromCookie(w http.ResponseWriter, r *http.Request) (string, error) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {

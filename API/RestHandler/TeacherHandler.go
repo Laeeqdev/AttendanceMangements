@@ -1,5 +1,0 @@
-package resthandler
-
-func addStudent() {
-
-}

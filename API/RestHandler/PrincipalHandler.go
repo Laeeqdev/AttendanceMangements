@@ -9,8 +9,19 @@ import (
 	"net/http"
 )
 
-func AddUser(w http.ResponseWriter, r *http.Request) {
-	email, err := auth.GetMailFromCookie(w, r)
+type PrincipalHandler interface {
+	AddUser(w http.ResponseWriter, r *http.Request)
+}
+type PrincipalHandlerImpl struct {
+	userService     service.UserService
+	userAuthHandler auth.UserAuthHandler
+}
+
+func NewPrincipalHandlerImpl(userService service.UserService, userAuthHandler auth.UserAuthHandler) *PrincipalHandlerImpl {
+	return &PrincipalHandlerImpl{userService: userService, userAuthHandler: userAuthHandler}
+}
+func (impl PrincipalHandlerImpl) AddUser(w http.ResponseWriter, r *http.Request) {
+	email, err := impl.userAuthHandler.GetMailFromCookie(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -19,7 +30,7 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err, ok := service.IsPrincipal(email)
+	err, ok := impl.userService.IsPrincipal(email)
 	if err != nil || !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -27,16 +38,13 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	user := &models.Users{}
 	_ = json.NewDecoder(r.Body).Decode(&user)
-	err = service.Adduser(user)
+	err = impl.userService.Adduser(user)
 	if err != nil {
 		log.Println("Error inserting user:", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(user)
-}
-func Logout(w http.ResponseWriter, r *http.Request) {
-	auth.Logout(w, r)
 }
 
 // package resthandler
