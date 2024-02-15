@@ -24,12 +24,22 @@ func Connect() *pg.DB {
 // initializeConnection sets up the database connection.
 
 func initializeConnection() *pg.DB {
-	Dbaddress, _ := pg.ParseURL(os.Getenv("DB_ADDR"))
-	opts := &pg.Options{
-		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		Addr:     Dbaddress.Addr,
-		Database: os.Getenv("DB_DATABASE"),
+	Dbaddress, _ := pg.ParseURL(os.Getenv("DB_ADDR1"))
+	opts := &pg.Options{}
+	if os.Getenv("Type") != "local" {
+		opts = &pg.Options{
+			User:     os.Getenv("DB_USER1"),
+			Password: os.Getenv("DB_PASSWORD1"),
+			Addr:     Dbaddress.Addr,
+			Database: os.Getenv("DB_DATABASE1"),
+		}
+	} else {
+		opts = &pg.Options{
+			User:     os.Getenv("DB_USER2"),
+			Password: os.Getenv("DB_PASSWORD2"),
+			Addr:     os.Getenv("DB_ADDR2"),
+			Database: os.Getenv("DB_DATABASE2"),
+		}
 	}
 	var db *pg.DB = pg.Connect(opts)
 	if db == nil {
