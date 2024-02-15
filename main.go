@@ -21,7 +21,7 @@ func main() {
 	myrouter := InitializeApp(db)
 	r := myrouter.MyRouter()
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://attendancemanagementwithlaeeq.netlify.app/v1"},
+		AllowedOrigins:   []string{"https://attendancemanagementwithlaeeq.netlify.app"},
 		AllowCredentials: true,
 	})
 	handler := c.Handler(r)
