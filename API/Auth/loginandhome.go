@@ -175,7 +175,8 @@ func (impl *UserAuthHandlerImpl) Refresh(w http.ResponseWriter, r *http.Request)
 			Value:    tokenString,
 			Expires:  expirationTime,
 			HttpOnly: false,
-			Secure:   false,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
 			Domain:   "localhost",
 			Path:     "/v1",
 		})
