@@ -1,10 +1,11 @@
 package databaseconnection
 
 import (
-	"github.com/go-pg/pg"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/go-pg/pg"
 )
 
 var (
@@ -21,11 +22,13 @@ func Connect() *pg.DB {
 }
 
 // initializeConnection sets up the database connection.
+
 func initializeConnection() *pg.DB {
+	Dbaddress, _ := pg.ParseURL(os.Getenv("DB_ADDR"))
 	opts := &pg.Options{
 		User:     os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
-		Addr:     os.Getenv("DB_ADDR"),
+		Addr:     Dbaddress.Addr,
 		Database: os.Getenv("DB_DATABASE"),
 	}
 	var db *pg.DB = pg.Connect(opts)

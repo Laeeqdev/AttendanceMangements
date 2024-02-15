@@ -20,10 +20,10 @@ func main() {
 	myrouter := InitializeApp(db)
 	r := myrouter.MyRouter()
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"http://localhost:3001"},
 		AllowCredentials: true,
 	})
 	handler := c.Handler(r)
-	defer log.Fatal(http.ListenAndServe(":8084", handler))
+	defer log.Fatal(http.ListenAndServe(":8089", handler))
 	defer databaseconnection.Close()
 }
