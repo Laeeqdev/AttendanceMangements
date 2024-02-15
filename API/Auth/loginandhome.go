@@ -72,7 +72,7 @@ func (impl *UserAuthHandlerImpl) Login(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: false,
 			Secure:   true,
 			SameSite: http.SameSiteStrictMode,
-			Domain:   ".netlify.app",
+			Domain:   ".laeeq.app",
 			Path:     "/v1",
 		})
 	err, role := impl.userService.GetDataForHome(credentials.Email)
@@ -178,7 +178,7 @@ func (impl *UserAuthHandlerImpl) Refresh(w http.ResponseWriter, r *http.Request)
 			HttpOnly: false,
 			Secure:   true,
 			SameSite: http.SameSiteStrictMode,
-			Domain:   ".netlify.app",
+			Domain:   ".laeeq.app",
 			Path:     "/v1",
 		})
 }
