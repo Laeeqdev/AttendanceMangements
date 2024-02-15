@@ -16,11 +16,12 @@ func main() {
 		fmt.Print("hi im error")
 		log.Fatal(err)
 	}
+
 	db := databaseconnection.Connect()
 	myrouter := InitializeApp(db)
 	r := myrouter.MyRouter()
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://attendancemanagementwithlaeeq.netlify.app/"},
+		AllowedOrigins:   []string{"https://attendancemanagementwithlaeeq.netlify.app/v1"},
 		AllowCredentials: true,
 	})
 	handler := c.Handler(r)
