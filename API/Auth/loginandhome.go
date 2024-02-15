@@ -45,7 +45,7 @@ func (impl *UserAuthHandlerImpl) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	err, yes := impl.userService.MatchPassword(credentials.Email, credentials.Password)
 	if !yes {
-		fmt.Println("password or email not found")
+		fmt.Println("password or email not found", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
