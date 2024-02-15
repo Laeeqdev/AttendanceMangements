@@ -71,7 +71,7 @@ func (impl *UserAuthHandlerImpl) Login(w http.ResponseWriter, r *http.Request) {
 			Expires:  expirationTime,
 			HttpOnly: false,
 			Secure:   false,
-			Domain:   "",
+			Domain:   "localhost",
 			Path:     "/v1",
 		})
 	err, role := impl.userService.GetDataForHome(credentials.Email)
@@ -176,7 +176,7 @@ func (impl *UserAuthHandlerImpl) Refresh(w http.ResponseWriter, r *http.Request)
 			Expires:  expirationTime,
 			HttpOnly: false,
 			Secure:   false,
-			Domain:   "",
+			Domain:   "localhost",
 			Path:     "/v1",
 		})
 }
